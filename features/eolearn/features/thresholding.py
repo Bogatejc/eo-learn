@@ -6,7 +6,7 @@ from eolearn.core import EOTask, FeatureType
 
 # IF not recognizing cv2 members: https://stackoverflow.com/questions/50612169/pylint-not-recognizing-cv2-members
 
-class Thresholding():
+class Thresholding(EOTask):
     """
     Task to compute thresholds of the image using basic and adaptive thresholding methods.
     Depending on the image, we can also use bluring methods that sometimes improve our results.
@@ -142,11 +142,9 @@ class Thresholding():
 
         return result
     
-    def execute(self, eopatch):
-        for feature_type, feature_name, new_feature_name in self.feature:
-            eopatch[feature_type][new_feature_name] = self._thresholding(eopatch[feature_type][feature_name])
-
-        return eopatch
+    # def execute(self, eopatch):
+    #     eopatch = self._thresholding(eopatch)
+    #     return eopatch
         
 
 class Bluring():
@@ -212,12 +210,16 @@ class Bluring():
     def _blur(self):
         if(self.blur_method == 'bilateralFilter'):
             self.img = cv.bilateralFilter(self.img, self.d, self.sigmaColor, self.sigmaSpace, self.borderType)
-            return self.img
         elif(self.blur_method == 'medianBlur'):
             self.img = cv.medianBlur(self.img, self.mKsize)
-            return self.img
         elif(self.blur_method == 'GaussianBlur'):
             self.img = cv.GaussianBlur(self.img, self.gKsize, self.sigmaX, self.sigmaY, self.borderType)
-            return self.img
         else: 
-            return self.img
+            self.img = img
+        return self.img
+
+def main():
+    img = cv.imread("./test10.png")
+    cv.imshow("Original", img)
+    th = Thresholding()
+    cv.imshow("Res", th._thresholding(img, 127,255))
