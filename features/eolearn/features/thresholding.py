@@ -4,6 +4,7 @@ from matplotlib import pyplot as plt
 from warnings import warn
 from eolearn.core import EOTask, FeatureType
 
+
 # IF not recognizing cv2 members: https://stackoverflow.com/questions/50612169/pylint-not-recognizing-cv2-members
 
 class Thresholding(EOTask):
@@ -35,8 +36,9 @@ class Thresholding(EOTask):
         'THRESH_BINARY_INV'
     }
 
-    def __init__(self, feature, img, simple_th_value, simple_th_maxValue, adaptive_th='ADAPTIVE_THRESH_MEAN_C', thresh_type='THRESH_BINARY', simple_th='THRESH_BINARY', blockSize=11, c=2, mask_th=10, maxValue=255, otsu=0):
+    def __init__(self, img, img2, simple_th_value, simple_th_maxValue, adaptive_th='ADAPTIVE_THRESH_MEAN_C', thresh_type='THRESH_BINARY', simple_th='THRESH_BINARY', blockSize=11, c=2, mask_th=10, maxValue=255, otsu=0):
         """
+        feature, 
         :param feature: A feature that will be used and a new feature name where data will be saved. If new name is not
                         specified it will be saved with name '<feature_name>THRESH'
                         Example: (FeatureType.DATA, 'bands') or (FeatureType.DATA, 'bands', 'thresh')
@@ -65,8 +67,9 @@ class Thresholding(EOTask):
         :param simple_th_maxValue: maximum value to use with the THRESH_BINARY and THRESH_BINARY_INV thresholding types
         :type simple_th_maxValue: int
         """
-        self.feature = self._parse_features(feature, default_feature_type=FeatureType.DATA, new_names=True, rename_function='{}_THRESH'.format)
+        #self.feature = self._parse_features(feature, default_feature_type=FeatureType.DATA, new_names=True, rename_function='{}_THRESH'.format)
         self.img = img
+        self.img2 = img2
         self.adaptive_th = adaptive_th
         if(self.adaptive_th not in self.AVAILABLE_METHODS_ADAPTIVE_THRESHOLDING):
             raise ValueError("Adaptive thresholding method must be one of these: {}".format(self.AVAILABLE_METHODS_ADAPTIVE_THRESHOLDING))
@@ -109,8 +112,13 @@ class Thresholding(EOTask):
                 th_adaptiv = cv.adaptiveThreshold(self.img, self.maxValue, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, self.blockSize, self.c)
         
         mask = (th_adaptiv < self.mask_th) * 255
-        self.img[mask!=0] = (255,0,0)
-
+        print(mask)
+        print(self.img)
+        cv.imshow("SLika", self.img)
+        
+        self.img2[mask!=0] = (255,0,0)
+        cv.imshow("IMG2 + MASKA", self.img2)
+        cv.waitKey(0)
         self.img = cv.cvtColor(self.img, cv.COLOR_BGR2RGB)
         if(self.simple_th == 'THRESH_BINARY'):
             if(self.otsu == 0):
@@ -140,11 +148,13 @@ class Thresholding(EOTask):
         else:
             result = self.img
 
+        print(result)
+        cv.imshow("REZ", result)
         return result
     
-    # def execute(self, eopatch):
-    #     eopatch = self._thresholding(eopatch)
-    #     return eopatch
+    def execute(self, eopatch):
+        eopatch = self._thresholding()
+        return eopatch
         
 
 class Bluring():
@@ -218,8 +228,13 @@ class Bluring():
             self.img = img
         return self.img
 
-def main():
-    img = cv.imread("./test10.png")
-    cv.imshow("Original", img)
-    th = Thresholding()
-    cv.imshow("Res", th._thresholding(img, 127,255))
+
+
+img = cv.imread("./test10.png", 0)
+img2 = cv.imread("./test10.png", 1)
+cv.imshow("Original", img)
+cv.imshow("Orig BARVNA", img2)
+th = Thresholding(img, img2, 127,255)
+th._thresholding()
+#cv.imshow("Res", th._thresholding)
+cv.waitKey()
